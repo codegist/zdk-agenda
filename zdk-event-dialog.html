@@ -1,0 +1,186 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-dialog/paper-action-dialog.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../core-icon/core-icon.html">
+<link rel="import" href="../paper-input/paper-input-decorator.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-autogrow-textarea.html">
+<link rel="import" href="../d-calendar/d-calendar.html">
+<!--<link rel="import" href="../paper-date-picker/paper-date-picker-dialog.html">-->
+<link rel="import" href="../paper-dropdown/paper-dropdown.html">
+<link rel="import" href="../core-collapse/core-collapse.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<script src="../momentjs/min/moment-with-locales.min.js"></script>
+
+<polymer-element name="x-trigger" extends="paper-icon-button" relative on-tap="{{toggle}}" noink>
+    <template>
+        <shadow></shadow>
+        <content></content>
+    </template>
+    <script>
+        Polymer({
+            toggle: function() {
+                if (!this.dropdown) {
+                    this.dropdown = this.querySelector('paper-dropdown');
+                    this.calendar = this.dropdown.querySelector('d-calendar');
+                }
+                this.dropdown && this.dropdown.toggle();
+                this.calendar.addEventListener('d-calendar-date-selected', function(e){
+                    this.dropdown.close();
+                }.bind(this));
+            }
+        });
+    </script>
+</polymer-element>
+
+<polymer-element name="zdk-event-dialog" attributes="event">
+    <template>
+        <style>
+            :host .colored {
+            color: #4285f4;
+            }
+            :host paper-action-dialog {
+                width:400px;
+                max-width:400px;
+            }
+            :host .date-picker-wrapper{
+                position: relative;
+                z-index: 1;
+            }
+            :host .date-picker {
+                position: absolute!important;
+                right:-11px;
+                top:19px;
+            }
+        </style>
+        <paper-action-dialog heading="{{heading}}" backdrop autoCloseDisabled layered="false" name="{{id}}">
+            <section>
+                <div vertical layout class="event-form">
+                    <paper-input-decorator label="Label" floatingLabel error="input is required!" autoValidate>
+                        <input is="core-input" required value="{{event.label}}">
+                    </paper-input-decorator>
+                    <div horizontal layout>
+                        <paper-input-decorator flex label="From" floatingLabel error="input is required!" autoValidate>
+                            <input is="core-input" required value="{{event.startFormatted}}">
+                        </paper-input-decorator>
+                        <div class="date-picker-wrapper">
+                            <x-trigger icon="menu" class="date-picker">
+                                <paper-dropdown class="no-padding" layered="true">
+                                    <d-calendar selectedDate="{{event.start}}" class="light-theme" ></d-calendar>
+                                </paper-dropdown>
+                            </x-trigger>
+                        </div>
+                    </div>
+                    <div horizontal layout>
+                        <paper-input-decorator flex label="To" floatingLabel error="input is required!" autoValidate>
+                            <input is="core-input" required value="{{event.endFormatted}}">
+                        </paper-input-decorator>
+                        <div class="date-picker-wrapper">
+                            <x-trigger icon="menu" class="date-picker">
+                                <paper-dropdown class="no-padding" layered="true">
+                                    <d-calendar selectedDate="{{event.end}}" class="light-theme" ></d-calendar>
+                                </paper-dropdown>
+                            </x-trigger>
+                        </div>
+                    </div>
+                    <paper-input-decorator label="Notes" floatingLabel>
+                        <paper-autogrow-textarea>
+                            <textarea value="{{event.notes}}"></textarea>
+                        </paper-autogrow-textarea>
+                    </paper-input-decorator>
+                </div>
+            </section>
+            <paper-button affirmative class="colored custom" on-tap="{{ok}}">
+                <core-icon icon="check"></core-icon>
+                <template if="{{ !create }}">ok</template>
+                <template if="{{ create }}">add</template>
+
+            </paper-button>
+            <paper-button dismissive class="custom" on-tap="{{cancel}}">
+                <core-icon icon="clear"></core-icon>
+                cancel
+            </paper-button>
+            <template if="{{ !create }}">
+                <paper-button dismissive class="custom" on-tap="{{delete}}">
+                    <core-icon icon="clear"></core-icon>
+                    delete
+                </paper-button>
+            </template>
+        </paper-action-dialog>
+    </template>
+    <script>
+        Polymer('zdk-event-dialog', {
+            heading:"",
+            existingEvent:"Edit event",
+            addEvent:"Add event",
+            create:false,
+            closeSelector: '[affirmative],[dismissive]',
+            domReady:function(){
+               // CoreStyle.g.dCalendar.accentColor = "#f44336";
+                this.dialog = this.querySelector(':host /deep/ paper-action-dialog');
+            },
+            ok:function(){
+                this.closeDialog("OK");
+            },
+            cancel:function(){
+                this.closeDialog("CANCEL");
+            },
+            delete:function(){
+                this.closeDialog("DELETE");
+            },
+            openDialog:function(event){
+                this.create = event === undefined;
+                this.event = this.create ? {
+                    allDay:false,
+                    className:"event1",
+                    recurring:false
+                } : event;
+
+                // this is a dirty fucking hack because of d-calendar switch data types between calls
+                // and also input type doesn't currently support date format apparently
+                if(typeof event.startFormatted === 'undefined') {
+                    var formatDate = function(date){
+                        return moment(date, moment.ISO_8601).format("DD/MM/YYYY HH:mm:ss");
+                    };
+                    var setDatePreserveTime = function(originalDateTime, newDate){
+                        var newDate = moment(newDate, "DD/MM/YYYY");
+                        var originalMom = moment(originalDateTime, moment.ISO_8601);
+                        originalMom.days(newDate.days())
+                                .months(newDate.months())
+                                .year(newDate.year());
+                        console.log()
+                        return originalMom.toISOString()
+                    };
+                    Object.defineProperty(event, "startFormatted", {
+                        get: function (a,b,c,d) {
+                            return formatDate(this.start);
+                        },
+                        set: function (value) {
+                            this.start = setDatePreserveTime(this.start, value);
+                        }
+                    });
+                    Object.defineProperty(event, "endFormatted", {
+                        get: function () {
+                            return formatDate(this.end);
+                        },
+                        set: function (value) {
+                            this.end = setDatePreserveTime(this.end, value);
+                        }
+                    });
+                }
+
+                this.heading = this.create ? this.addEvent : this.existingEvent;
+                this.dialog.toggle();
+            },
+            closeDialog:function(result){
+                this.dialog.open = false;
+                this.fire("zdk-event-dialog-close", {
+                    event: this.event,
+                    result: result
+                });
+            }
+        });
+    </script>
+</polymer-element>

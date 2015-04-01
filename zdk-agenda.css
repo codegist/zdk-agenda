@@ -343,12 +343,40 @@ div.eventMonth.deletable {
 div.eventMonth > paper-icon-button.close,
 #all-day-events .event > paper-icon-button.close,
 #view div.event > paper-icon-button.close {
-	display: block;
+	display: none;
 	position: absolute;
 	top: -10px;
 	right: -10px;
 	color: white;
 	z-index: 0;
+}
+.highlighted > paper-icon-button.close {
+	display: block!important;
+}
+
+
+.event > paper-icon-button.edit,
+.event > paper-icon-button.edit::shadow core-icon,
+.event > paper-icon-button.edit::shadow core-icon svg,
+.eventMonth > paper-icon-button.edit,
+.eventMonth > paper-icon-button.edit::shadow core-icon,
+.eventMonth > paper-icon-button.edit::shadow core-icon svg {
+	height:19px;
+	width:19px;
+}
+
+div.eventMonth > paper-icon-button.edit,
+#all-day-events .event > paper-icon-button.edit,
+#view div.event > paper-icon-button.edit {
+	display: none;
+	position: absolute;
+	top: -8px;
+	right: 11px;
+	color: white;
+	z-index: 0;
+}
+.highlighted > paper-icon-button.edit {
+	display: block!important;
 }
 
 div.day paper-dropdown {

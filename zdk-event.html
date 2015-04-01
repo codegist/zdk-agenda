@@ -1,6 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 
-<polymer-element name="zdk-event" attributes="date time end label" on-click={{eventClick}}>
+<polymer-element name="zdk-event" attributes="date time end label notes" on-click={{eventClick}}>
 	<template>
 		<style>
 			:host {
@@ -39,6 +39,7 @@
 		time: null,
 		end: null,
 		label: null,
+		notes: null,
 		startChanged: function(oldValue, newValue) {
 			if ( !oldValue || oldValue === newValue ) return;
 			this.setAttribute("start", newValue);
