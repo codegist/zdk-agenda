@@ -16,7 +16,7 @@
     <template>
         <style>
             :host .colored {
-            color: #4285f4;
+                color: #4285f4;
             }
             :host paper-action-dialog {
                 width:400px;
@@ -29,8 +29,12 @@
                     <paper-input-decorator label="Label" floatingLabel error="input is required!" autoValidate>
                         <input is="core-input" required value="{{_editCopy.label}}">
                     </paper-input-decorator>
-                    <cg-datetime-input datetime="{{_editCopy.start}}" label="From"></cg-datetime-input>
-                    <cg-datetime-input datetime="{{_editCopy.end}}" label="To"></cg-datetime-input>
+                    <paper-input-decorator label="From" floatingLabel error="input is required!" autoValidate>
+                        <cg-datetime-input datetime="{{_editCopy.start}}"></cg-datetime-input>
+                    </paper-input-decorator>
+                    <paper-input-decorator label="To" floatingLabel error="input is required!" autoValidate>
+                            <cg-datetime-input datetime="{{_editCopy.end}}"></cg-datetime-input>
+                    </paper-input-decorator>
                     <paper-input-decorator label="Notes" floatingLabel>
                         <paper-autogrow-textarea>
                             <textarea value="{{_editCopy.notes}}"></textarea>
@@ -67,7 +71,7 @@
                 this.dialog = this.querySelector(':host /deep/ paper-action-dialog');
             },
             ok:function(){
-                this._copyProps(this._editCopy, this.event);
+                Polymer.mixin(this.event, this._editCopy);
                 this.closeDialog("OK");
             },
             cancel:function(){
@@ -77,7 +81,7 @@
                 this.closeDialog("DELETE");
             },
             eventChanged:function(){
-                this._editCopy = this._extractProps(this.event, ["label", "start", "end", "notes"]);
+                this._editCopy = Polymer.mixin({}, this.event);
             },
             openDialog:function(event){
                 this.create = event === undefined;
@@ -95,17 +99,7 @@
                     event: this.event,
                     result: result
                 });
-            },
-            _copyProps:function(src, dest, props){
-                props.forEach(function(prop){
-                    dest[prop] = src[prop];
-                });
-            },
-            _extractProps:function(a, props){
-                var extract = {};
-                this._copyProps(a, extract, props);
-                return extract;
-            },
+            }
         });
     </script>
 </polymer-element>

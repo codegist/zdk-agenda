@@ -308,10 +308,6 @@ html /deep/ #confirm-delete .colored {
                 }.bind(this));
             },
 
-            augmentEvent:function(event){
-                Object.defineProperty(event, "endDateFormatted", { get: function () { return this.a + 1; } });
-            },
-
             domReady: function() {
                 this.$.weekdays.style.paddingRight = this._getScrollBarWidth() + 'px';
                 this.$['all-day-events'].style.paddingRight = this._getScrollBarWidth() + 'px';
