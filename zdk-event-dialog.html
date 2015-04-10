@@ -23,26 +23,26 @@
                 max-width:400px;
             }
         </style>
-        <paper-action-dialog heading="{{heading}}" backdrop autoCloseDisabled layered="false" name="{{id}}">
+        <paper-action-dialog heading="{{heading}}" autoCloseDisabled layered="false" name="{{id}}" id="dialog">
             <section>
                 <div vertical layout class="event-form">
-                    <paper-input-decorator label="Label" floatingLabel error="input is required!" autoValidate>
-                        <input is="core-input" required value="{{_editCopy.label}}">
+                    <paper-input-decorator label="Label" floatingLabel error="{{_validationError}}" autoValidate>
+                        <input role="input" is="core-input" required value="{{_editCopy.label}}">
                     </paper-input-decorator>
-                    <paper-input-decorator label="From" floatingLabel error="input is required!" autoValidate>
-                        <cg-datetime-input datetime="{{_editCopy.start}}"></cg-datetime-input>
+                    <paper-input-decorator label="From" floatingLabel error="{{_validationError}}" autoValidate>
+                        <cg-datetime-input role="input" required datetime="{{_editCopy.start}}"></cg-datetime-input>
                     </paper-input-decorator>
-                    <paper-input-decorator label="To" floatingLabel error="input is required!" autoValidate>
-                            <cg-datetime-input datetime="{{_editCopy.end}}"></cg-datetime-input>
+                    <paper-input-decorator label="To" floatingLabel error="{{_validationError}}" autoValidate id="endDate">
+                        <cg-datetime-input role="input" required datetime="{{_editCopy.end}}"></cg-datetime-input>
                     </paper-input-decorator>
                     <paper-input-decorator label="Notes" floatingLabel>
                         <paper-autogrow-textarea>
-                            <textarea value="{{_editCopy.notes}}"></textarea>
+                            <textarea role="input" value="{{_editCopy.notes}}"></textarea>
                         </paper-autogrow-textarea>
                     </paper-input-decorator>
                 </div>
             </section>
-            <paper-button affirmative class="colored custom" on-tap="{{ok}}">
+            <paper-button affirmative class="colored custom" on-tap="{{ok}}" id="okButton">
                 <core-icon icon="check"></core-icon>
                 <template if="{{ !create }}">ok</template>
                 <template if="{{ create }}">add</template>
@@ -66,9 +66,39 @@
             existingEvent:"Edit event",
             addEvent:"Add event",
             create:false,
+            _inputs:null,
             _editCopy:null,
-            domReady:function() {
-                this.dialog = this.querySelector(':host /deep/ paper-action-dialog');
+            _validationError:"Invalid or required",
+            domReady:function(){
+                // TODO : why on-change attribute works on all input but not on cg-datetime-input where it works in other places??
+                this._inputs = [].slice.call(this.shadowRoot.querySelectorAll("paper-input-decorator"));
+                [].slice.call(this.shadowRoot.querySelectorAll("[role='input']")).forEach(function(e){
+                    e.addEventListener("change", this._validate.bind(this));
+                }, this);
+            },
+            _validate:function(e){
+                this._doValidate();
+                // TODO HACK. Second slightly delayed validation
+                // TODO HACK. For some reason when selecting date from button rather than typing it,
+                // TODO HACK. change event comes with stale value, see cg-base-input > addEventListener('datetime-changed' and _onInputChange:
+                this.job("validate", this._doValidate.bind(this), 300);
+            },
+            _doValidate:function(){
+                var valid = true;
+                this._inputs.forEach(function(e){
+                    if(e.isInvalid) {
+                        valid = false;
+                    }
+                }, this);
+                if(valid) {
+                    var start = moment(this._editCopy.start, moment.ISO_8601);
+                    var end = moment(this._editCopy.end, moment.ISO_8601);
+                    valid = start.isBefore(end) && !start.isSame(end);
+                    if(!valid) {
+                        this.$.endDate.isInvalid = true;
+                    }
+                }
+                this.$.okButton.disabled = !valid;
             },
             ok:function(){
                 Polymer.mixin(this.event, this._editCopy);
@@ -91,10 +121,11 @@
                     recurring:false
                 } : event;
                 this.heading = this.create ? this.addEvent : this.existingEvent;
-                this.dialog.toggle();
+                this._validate();
+                this.$.dialog.toggle();
             },
             closeDialog:function(result){
-                this.dialog.open = false;
+                this.$.dialog.open = false;
                 this.fire("zdk-event-dialog-close", {
                     event: this.event,
                     result: result
