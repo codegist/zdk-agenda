@@ -10,6 +10,7 @@
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../cg-datetime-picker/cg-datetime-input.html">
+<link rel="import" href="../cg-input-tags/cg-input-tags.html">
 <script src="../momentjs/min/moment-with-locales.min.js"></script>
 
 <polymer-element name="zdk-event-dialog" attributes="event">
@@ -22,12 +23,28 @@
                 width:400px;
                 max-width:400px;
             }
+            :host select-box /deep/ #available {
+                max-height:120px!important;
+            }
+
+            :host select-box /deep/ #container:hover,
+            :host select-box /deep/ #container,
+            :host select-box /deep/ #container.focused,
+            :host select-box /deep/ #container.focused:hover,
+            :host select-box /deep/ #available,
+            :host select-box /deep/ #container.focused,
+            :host select-box /deep/ #container.focused:hover {
+                border: none;
+            }
         </style>
         <paper-action-dialog heading="{{heading}}" autoCloseDisabled layered="false" name="{{id}}" id="dialog">
             <section>
                 <div vertical layout class="event-form">
                     <paper-input-decorator label="Label" floatingLabel error="{{_validationError}}" autoValidate>
                         <input role="input" is="core-input" required value="{{_editCopy.label}}">
+                    </paper-input-decorator>
+                    <paper-input-decorator label="Reasons" floatingLabel error="{{_validationError}}" autoValidate>
+                        <cg-input-tags required tags="{{_reasons}}" selected="{{_editCopy.reasons}}" on-change="{{change}}"></cg-input-tags>
                     </paper-input-decorator>
                     <paper-input-decorator label="From" floatingLabel error="{{_validationError}}" autoValidate>
                         <cg-datetime-input role="input" required datetime="{{_editCopy.start}}"></cg-datetime-input>
@@ -68,6 +85,11 @@
             create:false,
             _inputs:null,
             _editCopy:null,
+            _reasons:[
+                "Root canal","Pulpotomy","Apicoectomy","Prosthodontics",
+                "Crowns","Veneers","Bridges","Implants","Dentures",
+                "Implant-supported prosthesis","Extraction","Fiberotomy"
+            ],
             _validationError:"Invalid or required",
             domReady:function(){
                 // TODO : why on-change attribute works on all input but not on cg-datetime-input where it works in other places??
@@ -102,6 +124,7 @@
             },
             ok:function(){
                 Polymer.mixin(this.event, this._editCopy);
+                this.event.reasons = this._editCopy.reasons.slice();
                 this.closeDialog("OK");
             },
             cancel:function(){
@@ -112,10 +135,12 @@
             },
             eventChanged:function(){
                 this._editCopy = Polymer.mixin({}, this.event);
+                this._editCopy.reasons = this.event.reasons.slice();
             },
             openDialog:function(event){
                 this.create = event === undefined;
                 this.event = this.create ? {
+                    reasons:[],
                     allDay:false,
                     className:"event1",
                     recurring:false

@@ -26,7 +26,6 @@
     "tests"
   ],
   "dependencies": {
-    "d-calendar": "subpopular/d-calendar#~1.0.0",
     "momentjs": "~2.8.4",
     "polymer": "Polymer/polymer#~0.5.1",
     "core-elements": "Polymer/core-elements#~0.5.1",

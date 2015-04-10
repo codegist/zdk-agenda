@@ -295,6 +295,9 @@ html /deep/ #confirm-delete .colored {
                             end: moment(eventElement.getAttribute('end'), 'YYYY-MM-DD HH:mm').toISOString(),
                             label: eventElement.getAttribute('label'),
                             notes: eventElement.getAttribute('notes'),
+                            reasons: [
+                                "Root canal","Bridges" // TODO
+                            ],
                             className: eventElement.className,
                             allDay: eventElement.getAttribute('all-day') || false,
                             recurring: eventElement.getAttribute('recurring')
